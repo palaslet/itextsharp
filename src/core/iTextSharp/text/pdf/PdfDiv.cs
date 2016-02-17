@@ -50,7 +50,8 @@ using iTextSharp.awt.geom;
 using iTextSharp.text.api;
 using iTextSharp.text.pdf.interfaces;
 
-namespace iTextSharp.text.pdf {
+namespace iTextSharp.text.pdf
+{
 
     public class PdfDiv : IElement, ISpaceable, IAccessibleElement
     {
@@ -69,23 +70,26 @@ namespace iTextSharp.text.pdf {
             RELATIVE
         };
 
-        public enum DisplayType {
+        public enum DisplayType
+        {
             DEFAULT_NULL_VALUE, NONE, BLOCK, INLINE, INLINE_BLOCK, INLINE_TABLE, LIST_ITEM, RUN_IN, TABLE, TABLE_CAPTION, TABLE_CELL, TABLE_COLUMN_GROUP, TABLE_COLUMN, TABLE_FOOTER_GROUP,
             TABLE_HEADER_GROUP, TABLE_ROW, TABLE_ROW_GROUP
         };
 
-        public enum BorderTopStyle
+        public enum BorderStyle
         {
             NONE,
-            DOTTED, 
-            DASHED, 
-            SOLID, 
-            DOUBLE, 
-            GROOVE, 
-            RIDGE, 
-            INSET, 
+            DOTTED,
+            DASHED,
+            SOLID,
+            DOUBLE,
+            GROOVE,
+            RIDGE,
+            INSET,
             OUTSET
         };
+
+        public string Tag;
 
         private List<IElement> content;
 
@@ -120,7 +124,7 @@ namespace iTextSharp.text.pdf {
         private float paddingBottom = 0;
 
         private BaseColor backgroundColor = null;
-        
+
         private Image backgroundImage = null;
 
         private float? backgroundImageWidth;
@@ -145,7 +149,9 @@ namespace iTextSharp.text.pdf {
 
         private FloatLayout floatLayout = null;
 
-        private BorderTopStyle borderTopStyle = BorderTopStyle.NONE;
+        private BorderStyle borderStyleTop = BorderStyle.NONE;
+
+        private BorderStyle borderStyleBottom = BorderStyle.NONE;
 
         private float yLine;
 
@@ -162,7 +168,7 @@ namespace iTextSharp.text.pdf {
          */
         private bool keepTogether;
 
-      
+
         virtual public float? Left
         {
             get { return left; }
@@ -225,12 +231,12 @@ namespace iTextSharp.text.pdf {
 
         virtual public float getActualHeight()
         {
-            return height != null && height >= contentHeight ? (float) height : contentHeight;
+            return height != null && height >= contentHeight ? (float)height : contentHeight;
         }
 
         virtual public float getActualWidth()
         {
-            return width != null && width >= contentWidth ? (float) width : contentWidth;
+            return width != null && width >= contentWidth ? (float)width : contentWidth;
         }
 
         virtual public int TextAlignment
@@ -281,9 +287,9 @@ namespace iTextSharp.text.pdf {
             set { floatLayout = value; }
         }
 
-        virtual public DisplayType Display 
+        virtual public DisplayType Display
         {
-            get { return display;  }
+            get { return display; }
             set { display = value; }
         }
 
@@ -293,15 +299,18 @@ namespace iTextSharp.text.pdf {
             set { backgroundColor = value; }
         }
 
-        virtual public Image BackgroundImage 
+        virtual public Image BackgroundImage
         {
             set { backgroundImage = value; }
         }
 
+        virtual public PdfDiv ParentDiv { get; private set; }
+
         /** 	
           * Image will be scaled to fit in the div occupied area.
           */
-        virtual public void SetBackgroundImage(Image image, float width, float height) {
+        virtual public void SetBackgroundImage(Image image, float width, float height)
+        {
             backgroundImage = image;
             backgroundImageWidth = width;
             backgroundImageHeight = height;
@@ -312,7 +321,8 @@ namespace iTextSharp.text.pdf {
             get { return yLine; }
         }
 
-        public virtual int RunDirection {
+        public virtual int RunDirection
+        {
             get { return runDirection; }
             set { runDirection = value; }
         }
@@ -334,18 +344,25 @@ namespace iTextSharp.text.pdf {
             get { return content; }
         }
 
-        virtual public BorderTopStyle BorderStyle
+        virtual public BorderStyle BorderStyleTop
         {
-            get { return borderTopStyle; }
-            set { borderTopStyle = value; }
+            get { return borderStyleTop; }
+            set { borderStyleTop = value; }
         }
 
-        virtual public bool KeepTogether {
+        virtual public BorderStyle BorderStyleBottom
+        {
+            get { return borderStyleBottom; }
+            set { borderStyleBottom = value; }
+        }
+
+        virtual public bool KeepTogether
+        {
             get { return keepTogether; }
             set { keepTogether = value; }
         }
 
-       
+
 
         public PdfDiv()
         {
@@ -415,6 +432,8 @@ namespace iTextSharp.text.pdf {
         virtual public void AddElement(IElement element)
         {
             content.Add(element);
+            if (element is PdfDiv)
+                ((PdfDiv)element).ParentDiv = this;
         }
 
         virtual public int Layout(PdfContentByte canvas, bool useAscender, bool simulate, float llx, float lly, float urx, float ury)
@@ -429,20 +448,23 @@ namespace iTextSharp.text.pdf {
             if (width != null && width > 0)
             {
                 if (width < rightX - leftX)
-                    rightX = leftX + (float) width;
+                    rightX = leftX + (float)width;
                 else if (width > rightX - leftX)
                     return ColumnText.NO_MORE_COLUMN;
             }
             else if (percentageWidth != null)
             {
-                contentWidth = (rightX - leftX)*(float) percentageWidth;
+                if (ParentDiv != null && ParentDiv.ContentWidth > 0)
+                    contentWidth = ParentDiv.ContentWidth * (float)percentageWidth;
+                else
+                    contentWidth = (rightX - leftX) * (float)percentageWidth;
                 rightX = leftX + contentWidth;
             }
-            else if (percentageWidth == null) 
+            else if (percentageWidth == null)
             {
                 if (this.floatType == FloatType.NONE && (this.display == DisplayType.DEFAULT_NULL_VALUE ||
                     this.display == DisplayType.BLOCK || this.display == DisplayType.LIST_ITEM ||
-                    this.display == DisplayType.RUN_IN)) 
+                    this.display == DisplayType.RUN_IN))
                 {
                     contentWidth = rightX - leftX;
                 }
@@ -453,7 +475,7 @@ namespace iTextSharp.text.pdf {
                 if (height < maxY - minY)
                 {
                     contentCutByFixedHeight = true;
-                    minY = maxY - (float) height;
+                    minY = maxY - (float)height;
                 }
                 else if (height > maxY - minY)
                 {
@@ -464,7 +486,7 @@ namespace iTextSharp.text.pdf {
             {
                 if (percentageHeight < 1.0)
                     contentCutByFixedHeight = true;
-                contentHeight = (maxY - minY)*(float) percentageHeight;
+                contentHeight = (maxY - minY) * (float)percentageHeight;
                 minY = maxY - contentHeight;
             }
 
@@ -496,24 +518,28 @@ namespace iTextSharp.text.pdf {
                     float backgroundWidth = getActualWidth();
                     float backgroundHeight = getActualHeight();
                     if (width != null)
-                        backgroundWidth = width > 0 ? (float) width : 0;
+                        backgroundWidth = width > 0 ? (float)width : 0;
                     if (height != null)
-                        backgroundHeight = height > 0 ? (float) height : 0;
+                        backgroundHeight = height > 0 ? (float)height : 0;
                     if (backgroundWidth > 0 && backgroundHeight > 0)
                     {
                         Rectangle background = new Rectangle(leftX, maxY - backgroundHeight, leftX + backgroundWidth, maxY);
-                        if (backgroundColor != null) {
+                        if (backgroundColor != null)
+                        {
                             background.BackgroundColor = backgroundColor;
                             PdfArtifact artifact = new PdfArtifact();
                             canvas.OpenMCBlock(artifact);
                             canvas.Rectangle(background);
                             canvas.CloseMCBlock(artifact);
                         }
-                        if (backgroundImage != null) {
-                            if (backgroundImageWidth == null) {
+                        if (backgroundImage != null)
+                        {
+                            if (backgroundImageWidth == null)
+                            {
                                 backgroundImage.ScaleToFit(background);
                             }
-                            else {
+                            else
+                            {
                                 backgroundImage.ScaleAbsolute((float)backgroundImageWidth, backgroundImageHeight);
                             }
                             backgroundImage.SetAbsolutePosition(background.Left, background.Bottom);
@@ -522,6 +548,30 @@ namespace iTextSharp.text.pdf {
                             canvas.CloseMCBlock(backgroundImage);
                         }
                     }
+                }
+                if (borderStyleBottom != BorderStyle.NONE || borderStyleTop != BorderStyle.NONE && (getActualWidth() > 0 || getActualHeight() > 0))
+                {
+                    float rectWidth = getActualWidth();
+                    float rectHeight = getActualHeight();
+                    if (width != null)
+                        rectWidth = width > 0 ? (float)width : 0;
+                    if (height != null)
+                        rectHeight = height > 0 ? (float)height : 0;
+
+                    Rectangle borderRect = new Rectangle(leftX, maxY - rectHeight, leftX + rectWidth, maxY);
+
+                    borderRect.Border = Rectangle.NO_BORDER;
+                    borderRect.BorderWidth = 1;
+                    borderRect.BorderColor = BaseColor.BLACK;
+                    if (borderStyleTop != BorderStyle.NONE)
+                        borderRect.Border += Rectangle.TOP_BORDER;
+                    if (borderStyleBottom != BorderStyle.NONE)
+                        borderRect.Border += Rectangle.BOTTOM_BORDER;
+
+                    PdfArtifact artifact = new PdfArtifact();
+                    canvas.OpenMCBlock(artifact);
+                    canvas.Rectangle(borderRect);
+                    canvas.CloseMCBlock(artifact);
                 }
             }
 
@@ -538,20 +588,24 @@ namespace iTextSharp.text.pdf {
 
             int status = ColumnText.NO_MORE_TEXT;
 
-            if (content.Count > 0) {
-                if (floatLayout == null) {
+            if (content.Count > 0)
+            {
+                if (floatLayout == null)
+                {
                     List<IElement> floatingElements = new List<IElement>(content);
                     floatLayout = new FloatLayout(floatingElements, useAscender);
                     floatLayout.RunDirection = runDirection;
                 }
 
                 floatLayout.SetSimpleColumn(leftX, minY, rightX, yLine);
-                if (borderTopStyle != BorderTopStyle.NONE)
+                if (borderStyleTop != BorderStyle.NONE)
                     floatLayout.compositeColumn.IgnoreSpacingBefore = false;
                 status = floatLayout.Layout(canvas, simulate);
-                yLine = floatLayout.YLine;
+                if (position != PositionType.ABSOLUTE)
+                    yLine = floatLayout.YLine;
 
-                if (percentageWidth == null && contentWidth < floatLayout.FilledWidth) {
+                if (percentageWidth == null && contentWidth < floatLayout.FilledWidth)
+                {
                     contentWidth = floatLayout.FilledWidth;
                 }
             }
@@ -579,27 +633,32 @@ namespace iTextSharp.text.pdf {
                 return null;
         }
 
-        public virtual void SetAccessibleAttribute(PdfName key, PdfObject value) {
+        public virtual void SetAccessibleAttribute(PdfName key, PdfObject value)
+        {
             if (accessibleAttributes == null)
                 accessibleAttributes = new Dictionary<PdfName, PdfObject>();
             accessibleAttributes[key] = value;
         }
 
-        public virtual Dictionary<PdfName, PdfObject> GetAccessibleAttributes() {
+        public virtual Dictionary<PdfName, PdfObject> GetAccessibleAttributes()
+        {
             return accessibleAttributes;
         }
 
-        public virtual PdfName Role {
+        public virtual PdfName Role
+        {
             get { return role; }
             set { role = value; }
         }
 
-        public virtual AccessibleElementId ID {
+        public virtual AccessibleElementId ID
+        {
             get { return id; }
             set { id = value; }
         }
 
-        public virtual bool IsInline {
+        public virtual bool IsInline
+        {
             get { return false; }
         }
     }

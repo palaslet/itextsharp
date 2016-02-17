@@ -58,58 +58,85 @@ using iTextSharp.tool.xml.net.exc;
 using iTextSharp.tool.xml.pipeline.html;
 using Image = iTextSharp.text.Image;
 
-namespace iTextSharp.tool.xml.css.apply {
+namespace iTextSharp.tool.xml.css.apply
+{
 
-    public class DivCssApplier {
+    public class DivCssApplier
+    {
         private CssUtils utils = CssUtils.GetInstance();
         private static ILogger LOG = LoggerFactory.GetLogger(typeof(DivCssApplier));
 
-        virtual public PdfDiv Apply(PdfDiv div, Tag t, IMarginMemory memory, IPageSizeContainable psc, HtmlPipelineContext context) {
+        virtual public PdfDiv Apply(PdfDiv div, Tag t, IMarginMemory memory, IPageSizeContainable psc, HtmlPipelineContext context)
+        {
+            if (t.Attributes.ContainsKey("id"))
+                div.Tag = t.Attributes["id"];
+
             IDictionary<String, String> css = t.CSS;
             float fontSize = FontSizeTranslator.GetInstance().TranslateFontSize(t);
-            if (fontSize == Font.UNDEFINED) {
-                fontSize =  FontSizeTranslator.DEFAULT_FONT_SIZE;
+            if (fontSize == Font.UNDEFINED)
+            {
+                fontSize = FontSizeTranslator.DEFAULT_FONT_SIZE;
             }
             String align = null;
-            if (t.Attributes.ContainsKey(HTML.Attribute.ALIGN)) {
+            if (t.Attributes.ContainsKey(HTML.Attribute.ALIGN))
+            {
                 align = t.Attributes[HTML.Attribute.ALIGN];
-            } else if (css.ContainsKey(CSS.Property.TEXT_ALIGN)) {
+            }
+            else if (css.ContainsKey(CSS.Property.TEXT_ALIGN))
+            {
                 align = css[CSS.Property.TEXT_ALIGN];
             }
 
-            if (align != null) {
+            if (align != null)
+            {
                 div.TextAlignment = CSS.GetElementAlignment(align);
             }
 
 
             String widthValue;
-            if (!css.TryGetValue(HTML.Attribute.WIDTH, out widthValue)) {
+            if (!css.TryGetValue(HTML.Attribute.WIDTH, out widthValue))
+            {
                 t.Attributes.TryGetValue(HTML.Attribute.WIDTH, out widthValue);
             }
-            if (widthValue != null) {
+            if (widthValue != null)
+            {
                 float pageWidth = psc.PageSize.Width;
-                if (utils.IsNumericValue(widthValue) || utils.IsMetricValue(widthValue)) {
-				    div.Width = Math.Min(pageWidth, utils.ParsePxInCmMmPcToPt(widthValue));
-                } else if (utils.IsRelativeValue(widthValue)) {
-                    if (widthValue.Contains(CSS.Value.PERCENTAGE)) {
+                if (utils.IsNumericValue(widthValue) || utils.IsMetricValue(widthValue))
+                {
+                    div.Width = Math.Min(pageWidth, utils.ParsePxInCmMmPcToPt(widthValue));
+                }
+                else if (utils.IsRelativeValue(widthValue))
+                {
+                    if (widthValue.Contains(CSS.Value.PERCENTAGE))
+                    {
                         div.PercentageWidth = utils.ParseRelativeValue(widthValue, 1f);
-                    } else {
+                    }
+                    else
+                    {
                         div.Width = Math.Min(pageWidth, utils.ParseRelativeValue(widthValue, fontSize));
                     }
                 }
             }
 
             String heightValue;
-            if (!css.TryGetValue(HTML.Attribute.HEIGHT, out heightValue)) {
+            if (!css.TryGetValue(HTML.Attribute.HEIGHT, out heightValue))
+            {
                 t.Attributes.TryGetValue(HTML.Attribute.HEIGHT, out heightValue);
             }
-            if (heightValue != null) {
-                if (utils.IsNumericValue(heightValue) || utils.IsMetricValue(heightValue)) {
+            if (heightValue != null)
+            {
+                if (utils.IsNumericValue(heightValue) || utils.IsMetricValue(heightValue))
+                {
                     div.Height = utils.ParsePxInCmMmPcToPt(heightValue);
-                } else if (utils.IsRelativeValue(heightValue)) {
-                    if (heightValue.Contains(CSS.Value.PERCENTAGE)) {
+                }
+                else if (utils.IsRelativeValue(heightValue))
+                {
+                    if (heightValue.Contains(CSS.Value.PERCENTAGE))
+                    {
                         div.PercentageHeight = utils.ParseRelativeValue(heightValue, 1f);
-                    } else {
+                    }
+                    else
+                    {
                         div.Height = utils.ParseRelativeValue(heightValue, fontSize);
                     }
                 }
@@ -118,138 +145,251 @@ namespace iTextSharp.tool.xml.css.apply {
             float? marginTop = null;
             float? marginBottom = null;
 
-            foreach (KeyValuePair<String, String> entry in css) {
+            foreach (KeyValuePair<String, String> entry in css)
+            {
                 String key = entry.Key;
-			    String value = entry.Value;
-                if (Util.EqualsIgnoreCase(key, CSS.Property.LEFT)) {
+                String value = entry.Value;
+                if (Util.EqualsIgnoreCase(key, CSS.Property.LEFT))
+                {
                     div.Left = utils.ParseValueToPt(value, fontSize);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.RIGHT)) {
-                    if (div.Width == null || div.Left == null) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.RIGHT))
+                {
+                    if (div.Width == null || div.Left == null)
+                    {
                         div.Right = utils.ParseValueToPt(value, fontSize);
                     }
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.TOP)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.TOP))
+                {
                     div.Top = utils.ParseValueToPt(value, fontSize);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.BOTTOM)) {
-                    if (div.Height == null || div.Top == null) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.BOTTOM))
+                {
+                    if (div.Height == null || div.Top == null)
+                    {
                         div.Bottom = utils.ParseValueToPt(value, fontSize);
                     }
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.BACKGROUND_COLOR)) {
-				    div.BackgroundColor = HtmlUtilities.DecodeColor(value);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.BACKGROUND_IMAGE)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.BACKGROUND_COLOR))
+                {
+                    div.BackgroundColor = HtmlUtilities.DecodeColor(value);
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.BACKGROUND_IMAGE))
+                {
                     string url = utils.ExtractUrl(value);
-                    try {
+                    try
+                    {
                         Image img =
                             new ImageRetrieve(context.ResourcePath, context.GetImageProvider()).RetrieveImage(url);
                         div.BackgroundImage = img;
                     }
-                    catch (NoImageException e) {
-                        if (LOG.IsLogging(Level.ERROR)) {
+                    catch (NoImageException e)
+                    {
+                        if (LOG.IsLogging(Level.ERROR))
+                        {
                             LOG.Error(string.Format(LocaleMessages.GetInstance().GetMessage("html.tag.img.failed"), url), e);
                         }
                     }
                 }
-                else if (Util.EqualsIgnoreCase(key, CSS.Property.PADDING_LEFT)) {
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.PADDING_LEFT))
+                {
                     div.PaddingLeft = utils.ParseValueToPt(value, fontSize);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.PADDING_RIGHT)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.PADDING_RIGHT))
+                {
                     div.PaddingRight = utils.ParseValueToPt(value, fontSize);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.PADDING_TOP)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.PADDING_TOP))
+                {
                     div.PaddingTop = utils.ParseValueToPt(value, fontSize);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.PADDING_BOTTOM)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.PADDING_BOTTOM))
+                {
                     div.PaddingBottom = utils.ParseValueToPt(value, fontSize);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.MARGIN_TOP)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.MARGIN_TOP))
+                {
+                    div.SpacingBefore = div.SpacingBefore + utils.CalculateMarginTop(value, fontSize, memory);
                     marginTop = utils.CalculateMarginTop(value, fontSize, memory);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.MARGIN_BOTTOM)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.MARGIN_BOTTOM))
+                {
+                    div.SpacingAfter = div.SpacingAfter + utils.CalculateMarginTop(value, fontSize, memory);
                     marginBottom = utils.ParseValueToPt(value, fontSize);
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.FLOAT)) {
-                    if (Util.EqualsIgnoreCase(value, CSS.Value.LEFT)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.FLOAT))
+                {
+                    if (Util.EqualsIgnoreCase(value, CSS.Value.LEFT))
+                    {
                         div.Float = PdfDiv.FloatType.LEFT;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.RIGHT)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.RIGHT))
+                    {
                         div.Float = PdfDiv.FloatType.RIGHT;
                     }
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.POSITION)) {
-                    if (Util.EqualsIgnoreCase(value, CSS.Value.ABSOLUTE)) {
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.POSITION))
+                {
+                    if (Util.EqualsIgnoreCase(value, CSS.Value.ABSOLUTE))
+                    {
                         div.Position = PdfDiv.PositionType.ABSOLUTE;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.FIXED)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.FIXED))
+                    {
                         div.Position = PdfDiv.PositionType.FIXED;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.RELATIVE)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.RELATIVE))
+                    {
                         div.Position = PdfDiv.PositionType.RELATIVE;
                     }
                 }
-                else if (Util.EqualsIgnoreCase(key, CSS.Property.DISPLAY)) {
-                    if (Util.EqualsIgnoreCase(value, CSS.Value.BLOCK)) {
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.DISPLAY))
+                {
+                    if (Util.EqualsIgnoreCase(value, CSS.Value.BLOCK))
+                    {
                         div.Display = PdfDiv.DisplayType.BLOCK;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.INLINE)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.INLINE))
+                    {
                         div.Display = PdfDiv.DisplayType.INLINE;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.INLINE_BLOCK)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.INLINE_BLOCK))
+                    {
                         div.Display = PdfDiv.DisplayType.INLINE_BLOCK;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.INLINE_TABLE)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.INLINE_TABLE))
+                    {
                         div.Display = PdfDiv.DisplayType.INLINE_TABLE;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.LIST_ITEM)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.LIST_ITEM))
+                    {
                         div.Display = PdfDiv.DisplayType.LIST_ITEM;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.NONE)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.NONE))
+                    {
                         div.Display = PdfDiv.DisplayType.NONE;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.RUN_IN)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.RUN_IN))
+                    {
                         div.Display = PdfDiv.DisplayType.RUN_IN;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_CAPTION)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_CAPTION))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE_CAPTION;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_CELL)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_CELL))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE_CELL;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_COLUMN_GROUP)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_COLUMN_GROUP))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE_COLUMN_GROUP;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_COLUMN)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_COLUMN))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE_COLUMN;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_FOOTER_GROUP)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_FOOTER_GROUP))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE_FOOTER_GROUP;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_HEADER_GROUP)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_HEADER_GROUP))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE_HEADER_GROUP;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_ROW)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_ROW))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE_ROW;
-                    } else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_ROW_GROUP)) {
+                    }
+                    else if (Util.EqualsIgnoreCase(value, CSS.Value.TABLE_ROW_GROUP))
+                    {
                         div.Display = PdfDiv.DisplayType.TABLE_ROW_GROUP;
                     }
                 }
-                else if (Util.EqualsIgnoreCase(CSS.Property.BORDER_TOP_STYLE, key))
+                else if (Util.EqualsIgnoreCase(CSS.Property.BORDER_TOP_STYLE, key) || Util.EqualsIgnoreCase(CSS.Property.BORDER_TOP, key))
                 {
-                    if (Util.EqualsIgnoreCase(CSS.Value.DOTTED, value))
+                    if (value.Contains(CSS.Value.DOTTED))
                     {
-                        div.BorderStyle = PdfDiv.BorderTopStyle.DOTTED;
+                        div.BorderStyleTop = PdfDiv.BorderStyle.DOTTED;
                     }
-                    else if (Util.EqualsIgnoreCase(CSS.Value.DASHED, value))
+                    else if (value.Contains(CSS.Value.DASHED))
                     {
-                        div.BorderStyle = PdfDiv.BorderTopStyle.DASHED;
+                        div.BorderStyleTop = PdfDiv.BorderStyle.DASHED;
                     }
-                    else if (Util.EqualsIgnoreCase(CSS.Value.SOLID, value))
+                    else if (value.Contains(CSS.Value.SOLID))
                     {
-                        div.BorderStyle = PdfDiv.BorderTopStyle.SOLID;
+                        div.BorderStyleTop = PdfDiv.BorderStyle.SOLID;
                     }
-                    else if (Util.EqualsIgnoreCase(CSS.Value.DOUBLE, value))
+                    else if (value.Contains(CSS.Value.DOUBLE))
                     {
-                        div.BorderStyle = PdfDiv.BorderTopStyle.DOUBLE;
+                        div.BorderStyleTop = PdfDiv.BorderStyle.DOUBLE;
                     }
-                    else if (Util.EqualsIgnoreCase(CSS.Value.GROOVE, value))
+                    else if (value.Contains(CSS.Value.GROOVE))
                     {
-                        div.BorderStyle = PdfDiv.BorderTopStyle.GROOVE;
+                        div.BorderStyleTop = PdfDiv.BorderStyle.GROOVE;
                     }
-                    else if (Util.EqualsIgnoreCase(CSS.Value.RIDGE, value))
+                    else if (value.Contains(CSS.Value.RIDGE))
                     {
-                        div.BorderStyle = PdfDiv.BorderTopStyle.RIDGE;
+                        div.BorderStyleTop = PdfDiv.BorderStyle.RIDGE;
                     }
-                    else if (Util.EqualsIgnoreCase(value, CSS.Value.INSET))
+                    else if (value.Contains(CSS.Value.INSET))
                     {
-                        div.BorderStyle = PdfDiv.BorderTopStyle.INSET;
+                        div.BorderStyleTop = PdfDiv.BorderStyle.INSET;
                     }
-                    else if (Util.EqualsIgnoreCase(value, CSS.Value.OUTSET))
+                    else if (value.Contains(CSS.Value.OUTSET))
                     {
-                        div.BorderStyle = PdfDiv.BorderTopStyle.OUTSET;
+                        div.BorderStyleTop = PdfDiv.BorderStyle.OUTSET;
                     }
 
-                } else if (Util.EqualsIgnoreCase(key, CSS.Property.PAGE_BREAK_INSIDE)) {
-                    if (Util.EqualsIgnoreCase(value, CSS.Value.AVOID)) {
+                }
+                else if (Util.EqualsIgnoreCase(CSS.Property.BORDER_BOTTOM_STYLE, key) || Util.EqualsIgnoreCase(CSS.Property.BORDER_BOTTOM, key))
+                {
+                    if (value.Contains(CSS.Value.DOTTED))
+                    {
+                        div.BorderStyleBottom = PdfDiv.BorderStyle.DOTTED;
+                    }
+                    else if (value.Contains(CSS.Value.DASHED))
+                    {
+                        div.BorderStyleBottom = PdfDiv.BorderStyle.DASHED;
+                    }
+                    else if (value.Contains(CSS.Value.SOLID))
+                    {
+                        div.BorderStyleBottom = PdfDiv.BorderStyle.SOLID;
+                    }
+                    else if (value.Contains(CSS.Value.DOUBLE))
+                    {
+                        div.BorderStyleBottom = PdfDiv.BorderStyle.DOUBLE;
+                    }
+                    else if (value.Contains(CSS.Value.GROOVE))
+                    {
+                        div.BorderStyleBottom = PdfDiv.BorderStyle.GROOVE;
+                    }
+                    else if (value.Contains(CSS.Value.RIDGE))
+                    {
+                        div.BorderStyleBottom = PdfDiv.BorderStyle.RIDGE;
+                    }
+                    else if (value.Contains(CSS.Value.INSET))
+                    {
+                        div.BorderStyleBottom = PdfDiv.BorderStyle.INSET;
+                    }
+                    else if (value.Contains(CSS.Value.OUTSET))
+                    {
+                        div.BorderStyleBottom = PdfDiv.BorderStyle.OUTSET;
+                    }
+
+                }
+                else if (Util.EqualsIgnoreCase(key, CSS.Property.PAGE_BREAK_INSIDE))
+                {
+                    if (Util.EqualsIgnoreCase(value, CSS.Value.AVOID))
+                    {
                         div.KeepTogether = true;
                     }
-                } 
+                }
 
                 //TODO: border, background properties.
             }
