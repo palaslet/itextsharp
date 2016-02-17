@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using iTextSharp.text;
+using iTextSharp.tool.xml.exceptions;
+using iTextSharp.text.pdf;
 
 /*
  * $Id: Span.java 122 2011-05-27 12:20:58Z redlab_b $
@@ -46,13 +48,15 @@ using iTextSharp.text;
  * For more information, please contact iText Software Corp. at this
  * address: sales@itextpdf.com
  */
-namespace iTextSharp.tool.xml.html {
+namespace iTextSharp.tool.xml.html
+{
 
     /**
      * @author redlab_b
      *
      */
-    public class Span : AbstractTagProcessor {
+    public class Span : AbstractTagProcessor
+    {
 
         /*
          * (non-Javadoc)
@@ -61,7 +65,8 @@ namespace iTextSharp.tool.xml.html {
          * com.itextpdf.tool.xml.ITagProcessor#content(com.itextpdf.tool.xml.Tag,
          * java.util.List, com.itextpdf.text.Document, java.lang.String)
          */
-        public override IList<IElement> Content(IWorkerContext ctx, Tag tag, String content) {
+        public override IList<IElement> Content(IWorkerContext ctx, Tag tag, String content)
+        {
             return TextContent(ctx, tag, content);
         }
 
@@ -69,8 +74,78 @@ namespace iTextSharp.tool.xml.html {
         /* (non-Javadoc)
          * @see com.itextpdf.tool.xml.ITagProcessor#endElement(com.itextpdf.tool.xml.Tag, java.util.List, com.itextpdf.text.Document)
          */
-        public override IList<IElement> End(IWorkerContext ctx, Tag tag, IList<IElement> currentContent) {
-            return CurrentContentToParagraph(currentContent, false, true, tag, ctx);
+        public override IList<IElement> End(IWorkerContext ctx, Tag tag, IList<IElement> currentContent)
+        {
+            try
+            {
+                Paragraph p = null;
+                PdfDiv div = (PdfDiv)GetCssAppliers().Apply(new PdfDiv() { Display = PdfDiv.DisplayType.INLINE }, tag, GetHtmlPipelineContext(ctx));
+                int direction = GetRunDirection(tag);
+
+                if (direction != PdfWriter.RUN_DIRECTION_DEFAULT)
+                {
+                    div.RunDirection = direction;
+                }
+
+                foreach (IElement e in currentContent)
+                {
+                    if (e is Paragraph || e is PdfPTable || e is PdfDiv)
+                    {
+                        if (p != null)
+                        {
+                            if (p.Trim())
+                            {
+                                div.AddElement(p);
+                            }
+                            p = null;
+                        }
+                        div.AddElement(e);
+                    }
+                    else
+                    {
+                        if (p == null)
+                        {
+                            p = new Paragraph();
+                            p.Alignment = div.TextAlignment;
+
+                            if (direction == PdfWriter.RUN_DIRECTION_RTL)
+                            {
+                                switch (p.Alignment)
+                                {
+                                    case Element.ALIGN_UNDEFINED:
+                                    case Element.ALIGN_CENTER:
+                                    case Element.ALIGN_JUSTIFIED:
+                                    case Element.ALIGN_JUSTIFIED_ALL:
+                                        break;
+                                    case Element.ALIGN_RIGHT:
+                                        p.Alignment = Element.ALIGN_LEFT;
+                                        break;
+                                    default:
+                                        p.Alignment = Element.ALIGN_RIGHT;
+                                        break;
+                                }
+                            }
+
+                            p.MultipliedLeading = 1.2f;
+                        }
+
+                        p.Add(e);
+                    }
+                }
+
+                if (p != null && p.Trim())
+                {
+                    div.AddElement(p);
+                }
+
+                List<IElement> l = new List<IElement>(1);
+                l.Add(div);
+                return l;
+            }
+            catch (NoCustomContextException e)
+            {
+                throw new RuntimeWorkerException(LocaleMessages.GetInstance().GetMessage(LocaleMessages.NO_CUSTOM_CONTEXT), e);
+            }
         }
 
         /*
@@ -78,7 +153,8 @@ namespace iTextSharp.tool.xml.html {
          *
          * @see com.itextpdf.tool.xml.ITagProcessor#isStackOwner()
          */
-        public override bool IsStackOwner() {
+        public override bool IsStackOwner()
+        {
             return true;
         }
     }
